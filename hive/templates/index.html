@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hive Style AI Chat Enhanced</title>
+<style>
+/* Reset some */
+* {
+box-sizing: border-box;
+}
+
+body {
+margin: 0;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: #f5f7fa;
+color: #333;
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+background: #121217;
+color: #ddd;
+}
+
+.chat-container {
+background: #ffffff;
+width: 420px;
+max-width: 95vw;
+height: 600px;
+border-radius: 15px;
+box-shadow:
+0 4px 6px rgba(50,50,93,.11),
+0 1px 3px rgba(0,0,0,.08);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark-mode .chat-container {
+background: #1e1e30;
+color: #ddd;
+}
+
+.chat-header {
+flex-shrink: 0;
+background: #6c63ff;
+color: #fff;
+padding: 20px;
+font-size: 1.4rem;
+font-weight: 700;
+letter-spacing: 1px;
+box-shadow: 0 2px 5px rgb(108 99 255 / 0.4);
+user-select: none;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.chat-header .title {
+user-select: none;
+}
+
+.chat-messages {
+flex-grow: 1;
+padding: 20px;
+overflow-y: auto;
+scroll-behavior: smooth;
+background: #f0f1f7;
+display: flex;
+flex-direction: column;
+gap: 16px;
+transition: background-color 0.3s ease;
+}
+
+body.dark-mode .chat-messages {
+background: #2a2a44;
+}
+
+.message {
+display: flex;
+gap: 12px;
+align-items: flex-start;
+max-width: 85%;
+position: relative;
+}
+
+.message.bot {
+align-self: flex-start;
+}
+
+.message.user {
+align-self: flex-end;
+flex-direction: row-reverse;
+}
+
+.profile-pic {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+object-fit: cover;
+box-shadow: 0 2px 5px rgb(0 0 0 / 0.2);
+flex-shrink: 0;
+user-select: none;
+}
+
+.bubble {
+max-width: 100%;
+padding: 12px 16px;
+border-radius: 20px;
+position: relative;
+font-size: 1rem;
+line-height: 1.3;
+box-shadow: 0 2px 6px rgb(0 0 0 / 0.08);
+word-break: break-word;
+white-space: pre-wrap;
+user-select: text;
+}
+
+.bot .bubble {
+background: #fff;
+color: #222;
+border-top-left-radius: 0;
+cursor: default;
+}
+
+body.dark-mode .bot .bubble {
+background: #40405a;
+color: #ddd;
+}
+
+.user .bubble {
+background: #6c63ff;
+color: #fff;
+border-top-right-radius: 0;
+cursor: default;
+}
+
+.timestamp {
+font-size: 0.7rem;
+color: #999;
+margin-top: 4px;
+user-select: none;
+}
+
+body.dark-mode .timestamp {
+color: #999;
+}
+
+.typing-text {
+font-family: monospace;
+white-space: nowrap;
+overflow: hidden;
+border-right: .15em solid #6c63ff;
+animation: typing 2s steps(20, end), blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+from { width: 0; }
+to { width: 100%; }
+}
+
+@keyframes blink-caret {
+from, to { border-color: transparent; }
+50% { border-color: #6c63ff; }
+}
+
+.chat-input-area {
+flex-shrink: 0;
+border-top: 1px solid #ddd;
+display: flex;
+padding: 14px 20px;
+background: #fff;
+align-items: center;
+gap: 10px;
+transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body.dark-mode .chat-input-area {
+background: #1e1e30;
+border-top: 1px solid #444;
+}
+
+.chat-input-area input[type="text"] {
+flex-grow: 1;
+border: 1.5px solid #ccc;
+border-radius: 25px;
+padding: 10px 20px;
+font-size: 1rem;
+outline: none;
+transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+color: #222;
+}
+body.dark-mode .chat-input-area input[type="text"] {
+border: 1.5px solid #555;
+background-color: #2a2a44;
+color: #eee;
+}
+
+.chat-input-area input[type="text"]::placeholder {
+color: #999;
+}
+body.dark-mode .chat-input-area input[type="text"]::placeholder {
+color: #bbb;
+}
+
+.chat-input-area input[type="text"]:focus {
+border-color: #6c63ff;
+box-shadow: 0 0 8px #6c63ffaa;
+background-color: #fff;
+color: #222;
+}
+body.dark-mode .chat-input-area input[type="text"]:focus {
+background-color: #373757;
+color: #eee;
+}
+
+.send-button {
+width: 44px;
+height: 44px;
+border-radius: 50%;
+background: #6c63ff;
+border: none;
+color: #fff;
+cursor: pointer;
+font-weight: 700;
+font-size: 1.2rem;
+display: flex;
+justify-content: center;
+align-items: center;
+position: relative;
+transition: background-color 0.3s ease;
+flex-shrink: 0;
+user-select:none;
+}
+
+.send-button:disabled {
+cursor: not-allowed;
+background: #a29bff;
+}
+
+/* Loading animation for button */
+.send-button.loading {
+pointer-events: none;
+color: transparent;
+}
+
+.send-button.loading::after {
+content: "";
+position: absolute;
+width: 20px;
+height: 20px;
+border: 3px solid #fff;
+border-top: 3px solid transparent;
+border-radius: 50%;
+animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg);}
+100% {transform: rotate(360deg);}
+}
+
+/* Message reactions container */
+.reactions-container {
+position: absolute;
+bottom: 110%;
+left: 50%;
+transform: translateX(-50%);
+background: #fff;
+border-radius: 30px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+display: flex;
+gap: 8px;
+padding: 6px 12px;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+user-select:none;
+z-index: 100;
+}
+
+body.dark-mode .reactions-container {
+background: #2a2a44;
+}
+
+.reaction {
+font-size: 1.4rem;
+cursor: pointer;
+transition: transform 0.15s ease;
+}
+
+.reaction:hover, .reaction.selected {
+transform: scale(1.3);
+}
+
+/* Show reactions container on message hover */
+.message:hover .reactions-container {
+opacity: 1;
+pointer-events: auto;
+}
+
+/* Editable bubble */
+.bubble[contenteditable="true"] {
+outline: 2px solid #6c63ff;
+cursor: text;
+}
+
+/* Star Icon for favorite messages */
+.star-icon {
+position: absolute;
+top: 4px;
+right: 6px;
+font-size: 1.2rem;
+cursor: pointer;
+color: #ddd;
+user-select:none;
+transition: color 0.3s ease;
+}
+.star-icon.favorited {
+color: gold;
+}
+
+/* Sticker picker container */
+.sticker-picker {
+position: absolute;
+bottom: 60px;
+right: 80px;
+background: #fff;
+border-radius: 12px;
+box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+padding: 6px;
+display: flex;
+gap: 6px;
+flex-wrap: wrap;
+z-index: 200;
+user-select:none;
+}
+
+body.dark-mode .sticker-picker {
+background: #2a2a44;
+}
+
+.sticker-picker img {
+width: 48px;
+height: 48px;
+cursor: pointer;
+border-radius: 8px;
+transition: transform 0.2s ease;
+}
+
+.sticker-picker img:hover {
+transform: scale(1.1);
+}
+
+/* Mode toggle switch */
+.toggle-switch {
+position: relative;
+width: 50px;
+height: 26px;
+user-select:none;
+}
+
+.toggle-switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+
+.slider {
+position: absolute;
+cursor: pointer;
+top: 0; left: 0; right: 0; bottom: 0;
+background-color: #ccc;
+border-radius: 34px;
+transition: .4s;
+}
+
+.slider:before {
+position: absolute;
+content: "";
+height: 18px;
+width: 18px;
+border-radius: 50%;
+left: 4px;
+bottom: 4px;
+background-color: white;
+transition: .4s;
+}
+
+input:checked + .slider {
+background-color: #6c63ff;
+}
+
+input:checked + .slider:before {
+transform: translateX(24px);
+}
+
+/* Reply suggestions */
+.suggestions {
+position: absolute;
+bottom: 64px;
+left: 20px;
+background: #fff;
+border-radius: 10px;
+box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+padding: 8px 12px;
+display: flex;
+gap: 8px;
+font-size: 0.9rem;
+user-select:none;
+z-index: 150;
+}
+
+body.dark-mode .suggestions {
+background: #2a2a44;
+color: #ddd;
+}
+
+.suggestion-btn {
+cursor: pointer;
+border: none;
+background: #6c63ff;
+color: white;
+border-radius: 18px;
+padding: 4px 12px;
+font-weight: 600;
+box-shadow: 0 2px 6px rgb(108 99 255 / 0.5);
+transition: background-color 0.3s ease;
+}
+
+.suggestion-btn:hover {
+background-color: #5848c2;
+}
+
+/* Chat background picker UI */
+.background-picker {
+position: absolute;
+top: 70px;
+left: 20px;
+display: flex;
+gap: 10px;
+user-select:none;
+z-index: 150;
+}
+
+.background-picker > div {
+width: 30px;
+height: 30px;
+border-radius: 6px;
+cursor: pointer;
+border: 2px solid transparent;
+transition: border-color 0.3s ease;
+}
+
+.background-picker > div.selected {
+border-color: #6c63ff;
+}
+
+.background1 { background: #f0f1f7; }
+.background2 { background: #ffe4e1; }
+.background3 { background: #dcf8c6; }
+.background4 { background: #d0e6fa; }
+.background5 { background: #faf0e6; }
+
+/* Scrollbar styling for chatMessages */
+.chat-messages::-webkit-scrollbar {
+width: 8px;
+}
+.chat-messages::-webkit-scrollbar-track {
+background: transparent;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+background-color: #6c63ff;
+border-radius: 10px;
+}
+body.dark-mode .chat-messages::-webkit-scrollbar-thumb {
+background-color: #a598ff;
+}
+
+/* Responsive for mobile devices max width 600px */
+@media (max-width: 600px) {
+.chat-container {
+width: 100vw;
+height: 100vh;
+border-radius: 0;
+}
+.chat-header {
+font-size: 1.2rem;
+padding: 16px;
+}
+.chat-input-area {
+padding: 12px 14px;
+gap: 6px;
+}
+.send-button {
+width: 40px;
+height: 40px;
+font-size: 1rem;
+}
+.profile-pic {
+width: 36px;
+height: 36px;
+}
+}
+</style>
+</head>
+<body>
+<div class="chat-container" role="main" aria-label="Chat conversation area" id="chatContainer">
+<header class="chat-header" role="banner">
+<span class="title">Hive AI Chat</span>
+<label class="toggle-switch" title="Toggle Dark Mode">
+<input type="checkbox" id="darkModeToggle" aria-label="Toggle dark mode" />
+<span class="slider"></span>
+</label>
+</header>
+<section class="chat-messages" id="chatMessages" aria-live="polite" aria-relevant="additions"></section>
+
+<!-- Reply suggestions container -->
+<div class="suggestions" id="suggestions" hidden></div>
+
+<!-- Background picker UI -->
+<div class="background-picker" id="backgroundPicker" title="Change chat background">
+<div class="background1 selected" tabindex="0" role="button" aria-label="Select light gray background"></div>
+<div class="background2" tabindex="0" role="button" aria-label="Select light pink background"></div>
+<div class="background3" tabindex="0" role="button" aria-label="Select light green background"></div>
+<div class="background4" tabindex="0" role="button" aria-label="Select light blue background"></div>
+<div class="background5" tabindex="0" role="button" aria-label="Select light cream background"></div>
+</div>
+
+<!-- Sticker picker toggle and picker -->
+<button id="stickerPickerToggle" title="Toggle sticker picker" aria-label="Toggle sticker picker" style="position: absolute; bottom: 70px; right: 20px; background:#6c63ff; border:none; border-radius:50%; width:44px; height:44px; color:#fff; cursor:pointer; outline:none; user-select:none; box-shadow:0 2px 6px rgb(108 99 255 / 0.6);">🎨</button>
+<div class="sticker-picker" id="stickerPicker" hidden aria-label="Sticker picker"></div>
+
+<form class="chat-input-area" id="chatForm" aria-label="Send a message" autocomplete="off">
+<input type="text" id="chatInput" name="chatInput"
+placeholder="Type something..." aria-label="Message input" autocomplete="off" required spellcheck="false" />
+<button type="submit" class="send-button" aria-label="Send message">▶</button>
+</form>
+<label style="position: absolute; bottom: 24px; right: 20px; font-size: 0.75rem; user-select:none; color:#666; user-select:none;">
+<input type="checkbox" id="soundToggle" title="Toggle message sounds" aria-label="Toggle message sounds" style="transform: scale(1.2); vertical-align: middle; margin-right: 4px;">
+Sound Effects
+</label>
+<label style="position: absolute; bottom: 24px; left: 20px; font-size: 0.75rem; user-select:none; color:#666; user-select:none;">
+<input type="checkbox" id="autoscrollToggle" title="Toggle auto scroll to bottom" aria-label="Toggle auto scroll" style="transform: scale(1.2); vertical-align: middle; margin-right: 4px;" checked>
+Auto Scroll
+</label>
+</div>
+
+<script>
+(() => {
+const chatMessages = document.getElementById('chatMessages');
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const sendButton = chatForm.querySelector('.send-button');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const suggestionsContainer = document.getElementById('suggestions');
+const backgroundPicker = document.getElementById('backgroundPicker');
+const stickerPickerToggle = document.getElementById('stickerPickerToggle');
+const stickerPicker = document.getElementById('stickerPicker');
+const soundToggle = document.getElementById('soundToggle');
+const autoscrollToggle = document.getElementById('autoscrollToggle');
+const chatContainer = document.getElementById('chatContainer');
+
+// Profile pics
+const profilePics = [
+'https://randomuser.me/api/portraits/women/44.jpg',
+'https://randomuser.me/api/portraits/men/32.jpg',
+'https://randomuser.me/api/portraits/women/65.jpg',
+'https://randomuser.me/api/portraits/men/77.jpg',
+'https://randomuser.me/api/portraits/women/12.jpg',
+'https://randomuser.me/api/portraits/men/9.jpg'
+];
+
+// Sticker images (public domain / emoji style)
+const stickers = [
+"https://twemoji.maxcdn.com/v/latest/72x72/1f600.png", // grinning face
+"https://twemoji.maxcdn.com/v/latest/72x72/1f603.png", // smiling face
+"https://twemoji.maxcdn.com/v/latest/72x72/1f609.png", // wink
+"https://twemoji.maxcdn.com/v/latest/72x72/1f60e.png", // sunglasses
+"https://twemoji.maxcdn.com/v/latest/72x72/1f642.png", // slight smile
+"https://twemoji.maxcdn.com/v/latest/72x72/1f973.png", // partying face
+"https://twemoji.maxcdn.com/v/latest/72x72/2764.png", // heart
+"https://twemoji.maxcdn.com/v/latest/72x72/1f44d.png", // thumbs up
+"https://twemoji.maxcdn.com/v/latest/72x72/1f4aa.png", // flexed biceps
+"https://twemoji.maxcdn.com/v/latest/72x72/1f44c.png" // OK hand
+];
+
+// Store favorites for message IDs (simple incremental)
+let messageIdCounter = 0;
+const favorites = new Set();
+
+// Sound effects setup
+const soundSend = new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+const soundReceive = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+
+// Auto scroll flag
+let autoScroll = true;
+
+// Dark mode toggle setup from localStorage
+function loadDarkModeSetting() {
+const preferDark = localStorage.getItem('darkModeEnabled');
+if (preferDark === "true") {
+document.body.classList.add('dark-mode');
+darkModeToggle.checked = true;
+}
+}
+loadDarkModeSetting();
+
+darkModeToggle.addEventListener('change', () => {
+if(darkModeToggle.checked) {
+document.body.classList.add('dark-mode');
+localStorage.setItem('darkModeEnabled', "true");
+} else {
+document.body.classList.remove('dark-mode');
+localStorage.setItem('darkModeEnabled', "false");
+}
+});
+
+// Background picker setup
+function setChatBackgroundClass(cls) {
+backgroundPicker.querySelectorAll('div').forEach(div => {
+div.classList.remove('selected');
+});
+const selected = backgroundPicker.querySelector('.' + cls);
+if (selected) {
+selected.classList.add('selected');
+}
+// Update chatMessages background color via style override
+const bgColors = {
+background1: '#f0f1f7',
+background2: '#ffe4e1',
+background3: '#dcf8c6',
+background4: '#d0e6fa',
+background5: '#faf0e6'
+};
+chatMessages.style.backgroundColor = bgColors[cls] || '#f0f1f7';
+}
+setChatBackgroundClass('background1');
+
+backgroundPicker.querySelectorAll('div').forEach(div => {
+div.addEventListener('click', () => {
+setChatBackgroundClass(div.classList[0]);
+});
+div.addEventListener('keydown', e => {
+if(e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+setChatBackgroundClass(div.classList[0]);
+}
+});
+});
+
+// Sticker picker toggle and populate
+function populateStickerPicker() {
+stickerPicker.innerHTML = '';
+stickers.forEach(url => {
+const img = document.createElement('img');
+img.src = url;
+img.alt = 'Sticker';
+img.title = 'Send sticker';
+img.tabIndex = 0;
+img.addEventListener('click', () => {
+sendSticker(url);
+});
+img.addEventListener('keydown', e => {
+if (e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+sendSticker(url);
+}
+});
+stickerPicker.appendChild(img);
+});
+}
+populateStickerPicker();
+
+stickerPickerToggle.addEventListener('click', () => {
+if(stickerPicker.hidden){
+stickerPicker.hidden = false;
+} else {
+stickerPicker.hidden = true;
+}
+});
+
+// Auto scroll toggle
+autoscrollToggle.addEventListener('change', () => {
+autoScroll = autoscrollToggle.checked;
+});
+
+// Play sound effects
+function playSound(sound) {
+if(soundToggle.checked) {
+sound.currentTime = 0;
+sound.play().catch(() => {}); // avoid unhandled promise error
+}
+}
+
+// AI-like reply generator - basic with some variation and fallback
+function generateAIReply(input) {
+const normalized = input.toLowerCase().trim();
+
+// Simple keyword based AI style responses
+const keywords = [
+{keys: ['hi', 'hello', 'hey'], responses: [
+"Hi there! I'm Hive AI, here to help you. 😊",
+"Hello! How can I assist you today?",
+"Hey! What's on your mind?"
+]},
+{keys: ['how are you', 'how is it going'], responses:[
+"I'm just a bunch of code, but I'm doing great!",
+"Doing well, thanks for asking! How about you?",
+"I appreciate you asking, I'm ready to chat!"
+]},
+{keys: ['good morning', 'morning'], responses:[
+"Good morning! Hope your day is off to a great start! ☀️",
+"Morning! Ready to seize the day?",
+"Hello! Wishing you a productive day ahead!"
+]},
+{keys: ['good night', 'night'], responses:[
+"Good night! Sleep well and sweet dreams!",
+"Night! Rest up for tomorrow!",
+"Wishing you a peaceful night."
+]},
+{keys: ['thank you', 'thanks'], responses:[
+"You're very welcome! 😊",
+"No problem at all!",
+"Glad I could help!"
+]},
+{keys: ['bye', 'goodbye', 'see you'], responses:[
+"Goodbye! Talk to you soon!",
+"See you later! Have a great one!",
+"Bye! Stay safe and happy!"
+]},
+{keys: ['what can you do', 'features', 'help'], responses:[
+"I can chat and keep you company! Try typing greetings or whatever is on your mind.",
+"I'm a fun chat AI. Let's talk!",
+"I have new cool features like message reactions, stickers, dark mode and more!"
+]}
+];
+
+for(const item of keywords) {
+for(const key of item.keys) {
+if(normalized.includes(key)) {
+return item.responses[Math.floor(Math.random()*item.responses.length)];
+}
+}
+}
+
+// Fallback generic responses
+const genericResponses = [
+"That's interesting! Tell me more.",
+"I'm here to listen. What else can you say?",
+"Could you elaborate on that?",
+"I'm learning more each day. Thanks for chatting!",
+"Hmm, I don't fully understand that yet, but I’m eager to learn."
+];
+
+return genericResponses[Math.floor(Math.random()*genericResponses.length)];
+}
+
+// Format current time as hh:mm AM/PM
+function getCurrentTimeString() {
+const now = new Date();
+let hours = now.getHours();
+const minutes = now.getMinutes();
+const ampm = hours >=12 ? 'PM' : 'AM';
+hours = hours % 12;
+hours = hours ? hours : 12; // hour '0' should be 12
+const minStr = minutes < 10 ? '0' + minutes : minutes;
+return hours + ':' + minStr + ' ' + ampm;
+}
+
+// Create a message element with reactions, editing etc.
+function createMessageElement(content, isUser, isSticker = false) {
+messageIdCounter++;
+const messageElem = document.createElement('div');
+messageElem.classList.add('message', isUser ? 'user' : 'bot');
+messageElem.dataset.id = messageIdCounter;
+
+const profileImg = document.createElement('img');
+profileImg.classList.add('profile-pic');
+profileImg.src = randomItem(profilePics);
+profileImg.alt = isUser ? 'User profile picture' : 'Bot profile picture';
+messageElem.appendChild(profileImg);
+
+const bubble = document.createElement('div');
+bubble.classList.add('bubble');
+if(isSticker){
+const img = document.createElement('img');
+img.src = content;
+img.alt = 'Sticker';
+img.style.maxWidth = '150px';
+img.style.borderRadius = '16px';
+bubble.appendChild(img);
+} else {
+bubble.textContent = content;
+}
+messageElem.appendChild(bubble);
+
+// Timestamp
+const timestamp = document.createElement('div');
+timestamp.classList.add('timestamp');
+timestamp.textContent = getCurrentTimeString();
+messageElem.appendChild(timestamp);
+
+// Message reactions container
+const reactionsContainer = document.createElement('div');
+reactionsContainer.classList.add('reactions-container');
+
+// Reactions emojis
+['👍', '❤️', '😂', '😮', '😢', '😡'].forEach(emoji => {
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.classList.add('reaction');
+btn.textContent = emoji;
+btn.title = 'React ' + emoji;
+btn.addEventListener('click', event => {
+event.stopPropagation();
+addReaction(messageElem, emoji, btn);
+});
+reactionsContainer.appendChild(btn);
+});
+
+messageElem.appendChild(reactionsContainer);
+
+// Star favorite icon
+const starIcon = document.createElement('span');
+starIcon.classList.add('star-icon');
+starIcon.title = 'Mark as favorite';
+starIcon.innerHTML = '☆';
+starIcon.setAttribute('role', 'button');
+starIcon.tabIndex = 0;
+
+starIcon.addEventListener('click', () => {
+toggleFavorite(messageElem, starIcon);
+});
+starIcon.addEventListener('keydown', (e) => {
+if(e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+toggleFavorite(messageElem, starIcon);
+}
+});
+messageElem.appendChild(starIcon);
+
+// Message editing for user messages
+if(isUser){
+bubble.setAttribute('contenteditable', 'true');
+bubble.setAttribute('aria-label', 'Editable message. Press Enter to save.');
+
+bubble.addEventListener('keydown', (e) => {
+if(e.key === 'Enter') {
+e.preventDefault();
+bubble.blur();
+}
+});
+
+bubble.addEventListener('blur', () => {
+// Save edits in bubble text content (no backend persistence, frontend only)
+// Just keep the edited content
+if(bubble.textContent.trim() === ''){
+// If empty after edit, delete the message
+messageElem.remove();
+}
+});
+}
+
+return messageElem;
+}
+
+// Add reaction emoji next to message
+function addReaction(messageElem, emoji, btn) {
+// Toggle selection
+const isSelected = btn.classList.contains('selected');
+if(isSelected){
+btn.classList.remove('selected');
+removeReactionDisplay(messageElem, emoji);
+return;
+}
+btn.classList.add('selected');
+// Add emoji display next to timestamp or bubble
+let reactionDisplay = messageElem.querySelector('.reaction-display-' + emoji.codePointAt(0));
+if(!reactionDisplay){
+reactionDisplay = document.createElement('span');
+reactionDisplay.className = 'reaction-display reaction-display-' + emoji.codePointAt(0);
+reactionDisplay.textContent = emoji;
+reactionDisplay.style.marginLeft = '8px';
+reactionDisplay.style.fontSize = '1.2rem';
+const timestamp = messageElem.querySelector('.timestamp');
+if(timestamp){
+timestamp.appendChild(reactionDisplay);
+} else {
+messageElem.appendChild(reactionDisplay);
+}
+}
+}
+function removeReactionDisplay(messageElem, emoji) {
+const reactionDisplay = messageElem.querySelector('.reaction-display-' + emoji.codePointAt(0));
+if(reactionDisplay){
+reactionDisplay.remove();
+}
+}
+
+// Toggle favorite star
+function toggleFavorite(messageElem, starIcon) {
+const msgId = messageElem.dataset.id;
+if(favorites.has(msgId)){
+favorites.delete(msgId);
+starIcon.classList.remove('favorited');
+starIcon.innerHTML = '☆';
+} else {
+favorites.add(msgId);
+starIcon.classList.add('favorited');
+starIcon.innerHTML = '★';
+}
+}
+
+// Utility: get random item from array
+function randomItem(arr) {
+return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Add message to chat and optionally auto scroll
+function addMessage(content, isUser=false, isSticker=false) {
+const messageElem = createMessageElement(content, isUser, isSticker);
+chatMessages.appendChild(messageElem);
+if(autoScroll){
+chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+return messageElem;
+}
+
+// Show typing animation message (fake) for bot
+function addTypingIndicator() {
+// Create a temporary typing bubble
+const msgElem = createMessageElement("Typing...", false);
+const bubble = msgElem.querySelector('.bubble');
+bubble.textContent = "Typing...";
+bubble.classList.add('typing-text');
+chatMessages.appendChild(msgElem);
+if(autoScroll){
+chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+return msgElem;
+}
+
+// Send bot reply with typing indicator
+function botReply(userText) {
+const typingElem = addTypingIndicator();
+
+// Simulate typing duration based on text length (~60ms per char, min 1.5s max 3.5s)
+const replyText = generateAIReply(userText);
+let delay = Math.min(Math.max(replyText.length * 60, 1500), 3500);
+
+setTimeout(() => {
+typingElem.remove();
+addMessage(replyText, false);
+playSound(soundReceive);
+}, delay);
+}
+
+// Send user text message and then bot reply
+chatForm.addEventListener('submit', (e) => {
+e.preventDefault();
+const userMessage = chatInput.value.trim();
+if(!userMessage) return;
+
+// Disable input and show loading spinner
+chatInput.disabled = true;
+sendButton.classList.add('loading');
+
+// Simulate sending delay 800ms to 1200ms
+const sendDelay = 1000 + Math.random() * 400;
+
+setTimeout(() => {
+sendButton.classList.remove('loading');
+chatInput.disabled = false;
+
+addMessage(userMessage, true);
+
+chatInput.value = '';
+chatInput.focus();
+playSound(soundSend);
+
+botReply(userMessage);
+}, sendDelay);
+});
+
+// Send sticker message
+function sendSticker(url) {
+// Close picker first
+stickerPicker.hidden = true;
+addMessage(url, true, true);
+playSound(soundSend);
+// Bot friendly sticker reply
+setTimeout(() => {
+const replies = [
+"Nice sticker! 😄",
+"I like that one! 😍",
+"Cool choice! 👍",
+"Haha, that made me smile!",
+"Stickers make chat fun!"
+];
+addMessage(randomItem(replies), false);
+playSound(soundReceive);
+}, 1500);
+}
+
+// Show welcome on load with typing animation sequence
+function showWelcomeMessage() {
+chatMessages.innerHTML = '';
+
+const welcomeTexts = [
+"Welcome to Hive AI Chat!",
+"Try typing greetings or anything to start chatting.",
+"Discover cool features like reactions, stickers, dark mode and more!"
+];
+
+let idx = 0;
+function showNext() {
+if(idx >= welcomeTexts.length) return;
+const msgElem = createMessageElement('', false);
+chatMessages.appendChild(msgElem);
+if(autoScroll){
+chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+const bubble = msgElem.querySelector('.bubble');
+bubble.classList.add('typing-text');
+let text = welcomeTexts[idx];
+let i = 0;
+
+function typeChar() {
+if(i <= text.length){
+bubble.textContent = text.slice(0,i);
+i++;
+setTimeout(typeChar, 80);
+if(autoScroll){
+chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+} else {
+bubble.classList.remove('typing-text');
+idx++;
+setTimeout(showNext, 1200);
+}
+}
+typeChar();
+}
+showNext();
+}
+
+// Reply suggestions feature implementation
+const suggestionPhrases = [
+"Hi!",
+"How are you?",
+"Good morning",
+"Thank you!",
+"Tell me a joke",
+"What's the weather?",
+"Goodbye!",
+"Help me",
+"What's up?",
+"Send me a sticker"
+];
+
+function updateSuggestions(text) {
+if(!text.trim()){
+suggestionsContainer.hidden = true;
+suggestionsContainer.innerHTML = '';
+return;
+}
+const filtered = suggestionPhrases.filter(phrase => phrase.toLowerCase().startsWith(text.toLowerCase()));
+if(filtered.length === 0){
+suggestionsContainer.hidden = true;
+suggestionsContainer.innerHTML = '';
+return;
+}
+suggestionsContainer.innerHTML = '';
+filtered.forEach(phrase => {
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.className = 'suggestion-btn';
+btn.textContent = phrase;
+btn.addEventListener('click', () => {
+chatInput.value = phrase;
+chatInput.focus();
+suggestionsContainer.hidden = true;
+suggestionsContainer.innerHTML = '';
+});
+suggestionsContainer.appendChild(btn);
+});
+suggestionsContainer.hidden = false;
+}
+
+chatInput.addEventListener('input', () => {
+updateSuggestions(chatInput.value);
+});
+
+// Hide suggestions on outside click
+document.addEventListener('click', (e) => {
+if(!suggestionsContainer.contains(e.target) && e.target !== chatInput){
+suggestionsContainer.hidden = true;
+suggestionsContainer.innerHTML = '';
+}
+});
+
+// Prevent form submission with Enter when suggestion is active (allow contenteditable bubble Enter but here it's input)
+chatInput.addEventListener('keydown', (e) => {
+if(e.key === 'Enter' && !sendButton.disabled){
+// Let submit normally
+suggestionsContainer.hidden = true;
+suggestionsContainer.innerHTML = '';
+}
+});
+
+// Implement keyboard accessibility for star icons "favorite"
+chatMessages.addEventListener('keydown', (e) => {
+if(e.target.classList.contains('star-icon') && (e.key === 'Enter' || e.key === ' ')){
+e.preventDefault();
+e.target.click();
+}
+});
+
+// Export chat conversation as text file
+function exportChat() {
+let textLines = [];
+chatMessages.querySelectorAll('.message').forEach(msg => {
+const isUser = msg.classList.contains('user');
+const bubble = msg.querySelector('.bubble');
+const timestamp = msg.querySelector('.timestamp');
+if(bubble && timestamp){
+let contentText = "";
+// If message is sticker - contains img
+const stickerImg = bubble.querySelector('img');
+if(stickerImg){
+contentText = `[Sticker] ${stickerImg.alt || 'Sticker image'}`;
+} else {
+contentText = bubble.textContent;
+}
+
+const line = `${isUser ? 'You' : 'Hive AI'} [${timestamp.textContent}]: ${contentText}`;
+textLines.push(line);
+}
+});
+const chatText = textLines.join('\n');
+const blob = new Blob([chatText], {type: 'text/plain'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'hive-ai-chat.txt';
+document.body.appendChild(a);
+a.click();
+setTimeout(() => {
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}, 100);
+}
+
+// Add export button in header
+const exportBtn = document.createElement('button');
+exportBtn.textContent = 'Export Chat';
+exportBtn.title = 'Export chat conversation as text file';
+exportBtn.style.border = 'none';
+exportBtn.style.padding = '6px 12px';
+exportBtn.style.borderRadius = '20px';
+exportBtn.style.backgroundColor = '#4b44c4';
+exportBtn.style.color = '#fff';
+exportBtn.style.cursor = 'pointer';
+exportBtn.style.fontWeight = '600';
+exportBtn.style.fontSize = '0.85rem';
+exportBtn.style.userSelect = 'none';
+exportBtn.style.transition = 'background-color 0.3s ease';
+exportBtn.style.marginLeft = '12px';
+exportBtn.setAttribute('aria-label', 'Export chat conversation as text file');
+
+exportBtn.addEventListener('click', () => {
+exportChat();
+});
+
+const header = document.querySelector('.chat-header');
+header.appendChild(exportBtn);
+
+// On document click: close sticker picker if clicked outside
+document.addEventListener('click', (e) => {
+if(!stickerPicker.contains(e.target) && e.target !== stickerPickerToggle){
+stickerPicker.hidden = true;
+}
+});
+
+// Accessibility improvement for button labels
+stickerPickerToggle.setAttribute('aria-pressed', 'false');
+stickerPickerToggle.addEventListener('click', () => {
+const pressed = stickerPickerToggle.getAttribute('aria-pressed') === 'true';
+stickerPickerToggle.setAttribute('aria-pressed', String(!pressed));
+});
+
+// Initial welcome message load
+showWelcomeMessage();
+})();
+</script>
+</body>
+</html>
